@@ -58,7 +58,7 @@ export function Hero() {
       </p>
 
       <div className="flex flex-col items-center gap-4">
-        <Link href="/chat">
+        <Link href="/signup">
           <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-xl">
             <MessageSquare className={language === "ar" ? "ml-2 h-5 w-5" : "mr-2 h-5 w-5"} />
             {translations.startChat}
