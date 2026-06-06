@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useApp } from "@/lib/contexts/AppContext"
+import { useAuth } from "@/lib/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { Toaster } from "@/components/ui/toaster"
 import { DesignViewer } from "@/components/design-viewer"
-import { UserIdModal } from "@/components/user-id-modal"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { UsageIndicator } from "@/components/usage-indicator"
@@ -68,7 +68,15 @@ interface ChatHistory {
 
 export default function ChatPage() {
   const { translations, language, setLanguage } = useApp()
+  const { user, loading } = useAuth()
   const router = useRouter()
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login")
+    }
+  }, [user, loading, router])
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -92,9 +100,7 @@ export default function ChatPage() {
   const [showFunctionsMenu, setShowFunctionsMenu] = useState(false)
   const [showUsageCard, setShowUsageCard] = useState(true)
   const [theme, setTheme] = useState<"light" | "dark">("dark")
-  const [mlgUserId, setMlgUserId] = useState<string | null>(null)
-  const [mlgPlan, setMlgPlan] = useState<string>("free")
-  const [showUserModal, setShowUserModal] = useState(false)
+
   // Animate-image states
   const [showAnimateModal, setShowAnimateModal] = useState(false)
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false)
@@ -191,10 +197,10 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  // Load conversations from Supabase when user ID is set
+  // Load conversations from server when user is authenticated
   const loadConversationsFromServer = async (userId: string) => {
     try {
-      const res = await fetch(`/api/user/conversations?user_id=${userId}`)
+      const res = await fetch(`/api/conversations?user_id=${userId}`)
       const data = await res.json()
       if (data.conversations && data.conversations.length > 0) {
         const histories: ChatHistory[] = data.conversations.map((c: any) => ({
@@ -211,36 +217,12 @@ export default function ChatPage() {
     }
   }
 
-  // Initialize user: check localStorage for existing ID
+  // Load user conversations when authenticated
   useEffect(() => {
-    const storedId = localStorage.getItem("mlg_user_id")
-    const storedPlan = localStorage.getItem("mlg_plan") || "free"
-    if (storedId) {
-      // Verify it still exists on server
-      fetch(`/api/user?id=${storedId}`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.user) {
-            setMlgUserId(data.user.mlg_user_id)
-            setMlgPlan(data.user.plan)
-            loadConversationsFromServer(data.user.mlg_user_id)
-          } else {
-            // ID invalid, show modal
-            localStorage.removeItem("mlg_user_id")
-            localStorage.removeItem("mlg_plan")
-            setShowUserModal(true)
-          }
-        })
-        .catch(() => {
-          // On error keep stored values
-          setMlgUserId(storedId)
-          setMlgPlan(storedPlan)
-          loadConversationsFromServer(storedId)
-        })
-    } else {
-      setShowUserModal(true)
+    if (user?.id) {
+      loadConversationsFromServer(user.id)
     }
-  }, [])
+  }, [user?.id])
 
   useEffect(() => {
     fetch("/api/usage", { cache: "no-store" })
@@ -1035,16 +1017,9 @@ export default function ChatPage() {
     }
   }
 
-  const handleUserReady = (userId: string, plan: string, isNew: boolean) => {
-    setMlgUserId(userId)
-    setMlgPlan(plan)
-    setShowUserModal(false)
-  }
-
   return (
     <div className="min-h-screen bg-background flex flex-col" dir={language === "ar" ? "rtl" : "ltr"} style={{ backgroundColor: 'hsl(var(--background))' }}>
       <Toaster />
-      {showUserModal && <UserIdModal onUserReady={handleUserReady} />}
       
       <div className="fixed top-0 left-0 right-0 z-[100] bg-background border-b border-border py-2 md:py-4" style={{ backgroundColor: 'hsl(var(--background))' }}>
         <div className="flex items-center justify-between px-2 sm:px-4 md:px-6">
