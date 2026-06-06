@@ -4,13 +4,25 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { MessageSquare, ArrowDown, Smartphone, Apple, X, Share, PlusSquare } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useApp } from "@/lib/contexts/AppContext"
+import { useAuth } from "@/lib/contexts/AuthContext"
 
 export function Hero() {
   const { translations, language } = useApp()
+  const { user, loading } = useAuth()
+  const router = useRouter()
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const [installed, setInstalled] = useState(false)
   const [showAppleGuide, setShowAppleGuide] = useState(false)
+
+  const handleStartChat = () => {
+    if (user) {
+      router.push("/chat")
+    } else {
+      router.push("/signup")
+    }
+  }
 
   useEffect(() => {
     const handler = (e: any) => { e.preventDefault(); setDeferredPrompt(e) }
@@ -58,12 +70,15 @@ export function Hero() {
       </p>
 
       <div className="flex flex-col items-center gap-4">
-        <Link href="/signup">
-          <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-xl">
-            <MessageSquare className={language === "ar" ? "ml-2 h-5 w-5" : "mr-2 h-5 w-5"} />
-            {translations.startChat}
-          </Button>
-        </Link>
+        <Button 
+          size="lg" 
+          onClick={handleStartChat}
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <MessageSquare className={language === "ar" ? "ml-2 h-5 w-5" : "mr-2 h-5 w-5"} />
+          {translations.startChat}
+        </Button>
 
         {/* PWA Install Buttons */}
         <div className="flex gap-3 mt-1" dir="rtl">
