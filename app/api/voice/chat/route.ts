@@ -1,7 +1,5 @@
 import { falChat } from "@/lib/fal-chat"
 
-import { generateWithFalRouter } from "@/lib/falRouterService"
-
 export const runtime = "nodejs"
 export const maxDuration = 30
 
@@ -51,25 +49,11 @@ export async function POST(request: Request) {
       .map((m) => ({ role: m.role as "user" | "assistant", content: String(m.content) }))
 
     const reply = await falChat(text, chatHistory, {
-      model: "google/gemini-2.5-flash",
+      model: "openai/gpt-oss-120b:free",
       systemPrompt: fullSystemPrompt,
       maxTokens: 200,
       temperature: 0.75,
     })
-
-    // Build messages array — keep last 8 turns for better context
-    const messages: { role: "user" | "assistant" | "system"; content: string }[] = [
-      ...(history || []).slice(-8),
-      { role: "user", content: text },
-    ]
-
-    // Using Fal OpenRouter for fast, natural responses
-    const rawReply = await generateWithFalRouter(
-      systemWithDate,
-      messages,
-      { maxTokens: 200, temperature: 0.75 }
-    )
- main
 
     let cleanReply = reply
       .replace(/\*\*/g, "").replace(/\*/g, "")

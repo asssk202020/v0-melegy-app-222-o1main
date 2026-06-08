@@ -1,5 +1,10 @@
-const FAL_KEY = process.env.FAL_KEY || "a39c63bd-f0c0-434e-a097-3b2db83e10d6:b4690234c50913962db3917c022cffc2"
-const DEFAULT_MODEL = "google/gemini-2.5-flash"
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
+const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+// النماذج المتاحة
+const MODEL_CHAT = "openai/gpt-oss-120b:free" // للردود النصية والدردشة العامة
+const MODEL_FILES = "google/gemma-4-31b-it:free" // لطلب الملفات والعروض التقديمية
+const MODEL_CODE = "z-ai/glm-4.5-air:free" // للكودينج وحلول البرمجة والـ SEO
 
 export interface FalChatOptions {
   model?: string
@@ -9,57 +14,67 @@ export interface FalChatOptions {
 }
 
 /**
- * Call Fal OpenRouter via REST API directly - bypasses client auth issues.
+ * Call OpenRouter API directly with standard OpenAI format
  */
 export async function falChat(
   userMessage: string,
   history: { role: "user" | "assistant"; content: string }[] = [],
   options: FalChatOptions = {}
 ): Promise<string> {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error("OPENROUTER_API_KEY غير محدد في متغيرات البيئة")
+  }
+
   const {
-    model = DEFAULT_MODEL,
+    model = MODEL_CHAT,
     systemPrompt,
     maxTokens = 600,
     temperature = 0.7,
   } = options
 
-  // Build conversation context from history
-  let conversationContext = ""
+  // بناء قائمة الرسائل
+  const messages: Array<{ role: string; content: string }> = []
+
+  // إضافة رسالة النظام إذا كانت موجودة
+  if (systemPrompt) {
+    messages.push({ role: "system", content: systemPrompt })
+  }
+
+  // إضافة السجل
   if (history.length > 0) {
     const recent = history.slice(-8)
-    conversationContext = recent
-      .map((m) => {
-        const role = m.role === "assistant" ? "ميليجي" : "المستخدم"
-        return `${role}: ${m.content}`
-      })
-      .join("\n")
-    conversationContext += "\n"
+    messages.push(
+      ...recent.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }))
+    )
   }
 
-  const fullPrompt = conversationContext + `المستخدم: ${userMessage}\nميليجي:`
+  // إضافة رسالة المستخدم الحالية
+  messages.push({ role: "user", content: userMessage })
 
-  const body: Record<string, any> = {
-    model,
-    prompt: fullPrompt,
-    max_tokens: maxTokens,
-    temperature,
-  }
-  if (systemPrompt) body.system_prompt = systemPrompt
-
-  const res = await fetch("https://fal.run/openrouter/router", {
+  const res = await fetch(OPENROUTER_API_URL, {
     method: "POST",
     headers: {
-      "Authorization": `Key ${FAL_KEY}`,
       "Content-Type": "application/json",
+      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+      "HTTP-Referer": typeof window !== "undefined" ? window.location.href : "http://localhost:3000",
+      "X-Title": "Melegy App",
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      model,
+      messages,
+      max_tokens: maxTokens,
+      temperature,
+    }),
   })
 
   if (!res.ok) {
     const err = await res.text()
-    throw new Error(`Fal API error ${res.status}: ${err}`)
+    throw new Error(`OpenRouter API error ${res.status}: ${err}`)
   }
 
   const data = await res.json()
-  return (data?.output || "").trim()
+  return (data?.choices?.[0]?.message?.content || "").trim()
 }

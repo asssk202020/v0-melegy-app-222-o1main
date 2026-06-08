@@ -1,6 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getModel, urlToInlinePart, stripMarkdown } from "@/lib/gemini"
-
 import { generateWithFalRouterVision } from "@/lib/falRouterService"
 
 export async function POST(request: NextRequest) {
@@ -24,24 +22,18 @@ export async function POST(request: NextRequest) {
 
 اذكر كل التفاصيل المرئية بدقة: الألوان، الخلفية، الإضاءة، الزوايا، الجو العام.${userPrompt !== "وصفلي الصورة دي بالتفصيل" ? `\n\nالمستخدم عايز يعرف: ${userPrompt}` : ""}`
 
-    const imagePart = await urlToInlinePart(imageUrl)
-    const model = getModel("gemini-2.5-flash")
-
-    const result = await model.generateContent({
-      contents: [{
-        role: "user",
-        parts: [{ text: analysisPrompt }, imagePart],
-      }],
-      generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
-    })
-
-    const description = stripMarkdown(result.response.text())
+    const description = await generateWithFalRouterVision(
+      "أنت مساعد ذكي متخصص في تحليل الصور. تتحدث بالعربية المصرية بشكل ودود واحترافي.",
+      analysisPrompt,
+      imageUrl,
+      { maxTokens: 2048, temperature: 0.7, model: "google/gemma-4-31b-it:free" }
+    )
 
     if (description && description.length > 20) {
-      return NextResponse.json({ description, provider: "gemini-vision" })
+      return NextResponse.json({ description, provider: "openrouter-vision" })
     }
 
-    throw new Error("No valid description from Gemini API")
+    throw new Error("No valid description from OpenRouter API")
   } catch (error: any) {
     console.error("[v0] Image analysis error:", error)
     return NextResponse.json({ error: "حصل خطأ في تحليل الصورة" }, { status: 500 })
