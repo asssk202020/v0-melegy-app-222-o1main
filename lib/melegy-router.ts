@@ -6,6 +6,7 @@
 
 import { generateWithFalRouter } from "./falRouterService"
 import { MELEGY_SYSTEM_PROMPT, MELEGY_CAPABILITIES } from "./melegy-system-prompt"
+import { shouldPerformWebSearch } from "./web-search-service"
 
 interface Message {
   role: "user" | "assistant" | "system"
@@ -18,6 +19,11 @@ interface Message {
  */
 function quickTaskTypeAnalysis(input: string): string {
   const lower = input.toLowerCase()
+
+  // Web Search - أولوية عالية للأخبار والمعلومات الحديثة
+  if (shouldPerformWebSearch(input)) {
+    return "web_search"
+  }
 
   // PPT/Presentation - أعطيه أولوية عالية
   if (
