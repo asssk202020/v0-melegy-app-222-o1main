@@ -679,14 +679,22 @@ export default function ChatPage() {
 
         setMessages((prev) => [...prev, assistantMessage])
         setIsLoading(false)
-        await incrementMessageUsage()
+        try {
+          await incrementMessageUsage()
+        } catch (usageError) {
+          console.error("[v0] Error incrementing message usage:", usageError)
+        }
         return
       }
 
       if (isImageRequest) {
         await generateImageWithPrompt(currentInput)
         setIsLoading(false)
-        await incrementMessageUsage()
+        try {
+          await incrementMessageUsage()
+        } catch (usageError) {
+          console.error("[v0] Error incrementing message usage:", usageError)
+        }
         return
       }
 
@@ -710,7 +718,11 @@ export default function ChatPage() {
 
         setMessages((prev) => [...prev, assistantMessage])
         setIsLoading(false)
-        await incrementMessageUsage()
+        try {
+          await incrementMessageUsage()
+        } catch (usageError) {
+          console.error("[v0] Error incrementing message usage:", usageError)
+        }
         return
       }
 
@@ -754,7 +766,13 @@ export default function ChatPage() {
       }
 
       setMessages((prev) => [...prev, assistantMessage])
-      await incrementMessageUsage()
+      
+      // Try to increment usage, but don't fail if it errors
+      try {
+        await incrementMessageUsage()
+      } catch (usageError) {
+        console.error("[v0] Error incrementing message usage:", usageError)
+      }
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
