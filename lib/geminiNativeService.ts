@@ -115,7 +115,7 @@ export async function generateStreamingResponse(
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-      "HTTP-Referer": typeof window !== "undefined" ? window.location.href : "http://localhost:3000",
+      "HTTP-Referer": "https://melegy.app",
       "X-Title": "Melegy App",
     },
     body: JSON.stringify(requestBody),
