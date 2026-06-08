@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
 import { generateWithFalRouter, generateWithFalRouterVision } from "@/lib/falRouterService"
-import { stripMarkdown } from "@/lib/gemini"
+
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/_{1,2}(.+?)_{1,2}/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/`{1,3}[^`]*`{1,3}/g, "")
+    .replace(/^[\s]*[-*•]\s+/gm, "")
+    .replace(/^\d+\.\s+/gm, "")
+    .replace(/\[\d+\]/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+}
 
 const EGYPTIAN_SYSTEM_PROMPT = `أنت ميليجي، مساعد ذكي مصري ودود جداً بشخصية حقيقية ومرحة! طورتك Vision AI Studio المصرية.
 
@@ -66,7 +79,7 @@ export async function POST(request: NextRequest) {
           fullSystemPrompt,
           userPrompt,
           imageUrl,
-          { maxTokens: 600, temperature: 0.7, model: "google/gemini-2.5-flash" }
+          { maxTokens: 600, temperature: 0.7, model: "google/gemma-4-31b-it:free" }
         )
         const cleanedText = stripMarkdown(visionResponse)
         return NextResponse.json({
@@ -79,9 +92,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Text chat via Fal OpenRouter
+    // Text chat via OpenRouter
     const responseText = await generateWithFalRouter(fullSystemPrompt, messages, {
-      model: "google/gemini-2.5-flash",
+      model: "openai/gpt-oss-120b:free",
       maxTokens: 600,
       temperature: 0.7,
     })

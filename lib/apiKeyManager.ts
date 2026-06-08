@@ -1,4 +1,4 @@
-const API_KEYS: string[] = (process.env.GEMINI_API_KEYS || "")
+const API_KEYS: string[] = (process.env.OPENROUTER_API_KEY || "")
   .split(",")
   .map((k) => k.trim())
   .filter(Boolean)

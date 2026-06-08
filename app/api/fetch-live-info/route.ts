@@ -1,7 +1,5 @@
 import { falChat } from "@/lib/fal-chat"
 
-import { generateWithFalRouter } from "@/lib/falRouterService"
-
 export async function POST(request: Request) {
   try {
     const { query } = await request.json()
@@ -13,7 +11,7 @@ export async function POST(request: Request) {
     const systemPrompt = `You are a helpful assistant responding to users in Arabic with a friendly and professional tone. Be conversational, helpful, and accurate. Use Egyptian Arabic when possible.`
 
     const content = await falChat(query, [], {
-      model: "google/gemini-2.5-flash",
+      model: "openai/gpt-oss-120b:free",
       systemPrompt,
       maxTokens: 1024,
       temperature: 0.7,

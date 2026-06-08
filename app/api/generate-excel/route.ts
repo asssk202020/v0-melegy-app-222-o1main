@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server"
 import { falChat } from "@/lib/fal-chat"
 
-import { generateWithFalRouter } from "@/lib/falRouterService"
-
 export async function POST(req: Request) {
   try {
     const { prompt } = await req.json()
@@ -45,7 +43,7 @@ async function generateExcelDataWithAI(
 لا تكتب أي شيء قبل أو بعد الـ JSON.`
 
   const text = await falChat(prompt, [], {
-    model: "google/gemini-2.5-flash",
+    model: "google/gemma-4-31b-it:free",
     systemPrompt,
     maxTokens: 4000,
     temperature: 0.3,

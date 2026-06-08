@@ -1,4 +1,4 @@
-import { apiKeyManager } from "./apiKeyManager"
+import { falChat } from "./fal-chat"
 
 interface TableCell {
   content: string
@@ -23,12 +23,6 @@ interface TableData {
 }
 
 export class TableService {
-  private apiKey: string
-
-  constructor() {
-    this.apiKey = apiKeyManager.getCurrentKey()
-  }
-
   async generateTable(
     topic: string,
     style: "scientific" | "business" | "educational" | "comparison" = "educational",
@@ -36,34 +30,14 @@ export class TableService {
     try {
       const prompt = this.buildTablePrompt(topic, style)
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${this.apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [{ text: prompt }],
-              },
-            ],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 2048,
-            },
-          }),
-        },
-      )
+      const systemPrompt = `أنت مساعد متخصص في إنشاء الجداول. قدم الجدول بتنسيق واضح مع فواصل بين الأعمدة والصفوف.`
 
-      if (!response.ok) {
-        apiKeyManager.reportError()
-        throw new Error(`API error: ${response.status}`)
-      }
-
-      const data = await response.json()
-      apiKeyManager.reportSuccess()
-
-      const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || ""
+      const generatedText = await falChat(prompt, [], {
+        model: "google/gemma-4-31b-it:free",
+        systemPrompt,
+        maxTokens: 2048,
+        temperature: 0.7,
+      })
 
       return this.parseTableFromText(generatedText, topic, style)
     } catch (error) {
