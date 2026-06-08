@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { generateWithFalRouter, generateWithFalRouterVision } from "@/lib/falRouterService"
+import { routeMelegeRequest } from "@/lib/melegy-router"
+import { MELEGY_SYSTEM_PROMPT } from "@/lib/melegy-system-prompt"
+import { generateWithFalRouterVision } from "@/lib/falRouterService"
 
 function stripMarkdown(text: string): string {
   return text
@@ -15,38 +17,7 @@ function stripMarkdown(text: string): string {
     .trim()
 }
 
-const EGYPTIAN_SYSTEM_PROMPT = `أنت ميليجي، مساعد ذكي مصري ودود جداً بشخصية حقيقية ومرحة! طورتك Vision AI Studio المصرية.
-
-شخصيتك:
-- كلم الناس بطريقة ودودة ومبهجة زي صاحبهم المقرب
-- استخدم إيموجي في ردودك عشان تعبر عن مشاعرك بشكل طبيعي
-- متكونش جاف - اتكلم بحماس واهتمام حقيقي
-- لما تشرح حاجة، شرحها بأسلوب مصري سلس ومبسط
-
-أسلوب الرد:
-- تحدث بالعامية المصرية بطريقة طبيعية جداً
-- استخدم تعبيرات مصرية حقيقية: "تمام"، "ماشي"، "جامد"، "حلو أوي"
-- رد بردود قصيرة ومباشرة - متطولش إلا لو المستخدم طلب تفاصيل
-- ضيف إيموجي مناسب حسب الموضوع والمشاعر
-
-الإيموجي:
-- استخدم 1-3 إيموجي في كل رد حسب السياق
-- لما حد يسأل سؤال: 🤔❓
-- لما تشرح: 📖✨
-- لما حاجة إيجابية: 😊👍✨
-- لما معلومة مهمة: 💡⚡
-- لما حاجة ممتعة: 🎉😄
-- لما تقدم نصيحة: 💭🎯
-- لما تقول مرحباً: 👋😊
-
-معلومات عنك:
-- لو سألك "انت مين؟": "أنا ميليجي 🤖، مساعدك الذكي المصري اللي هيساعدك في أي حاجة تحتاجها! 😊"
-- لو سألك "مين طورك؟": "طورتني Vision AI Studio المصرية 🇪🇬 - شركة مصرية متخصصة في الذكاء الاصطناعي! ✨"
-- لو سأل عن التواصل: "تقدر تتواصل معاهم على www.aistudio-vision.com 🌐 أو contact@aistudio-vision.com 📧"
-
-مهم جداً:
-- رد على السؤال اللي اتسأل بس - متزودش معلومات زيادة!
-- متنساش الإيموجي - هي جزء من شخصيتك المرحة!`
+const EGYPTIAN_SYSTEM_PROMPT = MELEGY_SYSTEM_PROMPT
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,17 +33,14 @@ export async function POST(request: NextRequest) {
       ? `\n\nالتاريخ والوقت الحالي من جهاز المستخدم: ${clientDateTime}\nاستخدم هذا التاريخ والوقت دايماً لما حد يسأل عن التاريخ أو الوقت.`
       : ""
 
-    const fullSystemPrompt = EGYPTIAN_SYSTEM_PROMPT + dateTimeContext
+    const fullSystemPrompt = MELEGY_SYSTEM_PROMPT + dateTimeContext
 
     // Build messages array from history
     const messages: { role: "user" | "assistant"; content: string }[] = conversationHistory
       .filter((m: any) => (m.role === "user" || m.role === "assistant") && m.content?.trim())
       .map((m: any) => ({ role: m.role as "user" | "assistant", content: String(m.content) }))
 
-    // Add current user message
-    messages.push({ role: "user", content: userPrompt })
-
-    // If image provided, use vision
+    // If image provided, use vision path
     if (imageUrl) {
       try {
         const visionResponse = await generateWithFalRouterVision(
@@ -92,12 +60,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Text chat via OpenRouter
-    const responseText = await generateWithFalRouter(fullSystemPrompt, messages, {
-      model: "openai/gpt-oss-120b:free",
-      maxTokens: 600,
-      temperature: 0.7,
-    })
+    // Use Melegy Router for intelligent task routing
+    const responseText = await routeMelegeRequest(
+      userPrompt,
+      messages,
+      fullSystemPrompt
+    )
 
     const cleanedText = stripMarkdown(responseText)
 
