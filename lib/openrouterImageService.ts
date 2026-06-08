@@ -41,7 +41,7 @@ export async function generateImage(request: ImageGenerationRequest): Promise<st
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-        "HTTP-Referer": typeof window !== "undefined" ? window.location.href : "http://localhost:3000",
+        "HTTP-Referer": "https://melegy.app",
         "X-Title": "Melegy App",
       },
       body: JSON.stringify(requestBody),
@@ -107,7 +107,7 @@ export async function editImage(request: ImageEditRequest): Promise<string> {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-        "HTTP-Referer": typeof window !== "undefined" ? window.location.href : "http://localhost:3000",
+        "HTTP-Referer": "https://melegy.app",
         "X-Title": "Melegy App",
       },
       body: JSON.stringify(requestBody),
