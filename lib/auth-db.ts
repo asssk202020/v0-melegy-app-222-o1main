@@ -1,32 +1,19 @@
 /**
  * lib/auth-db.ts — PostgreSQL Authentication Database
- * Uses AWS Aurora PostgreSQL with IAM authentication for user/session management
+ * Uses Neon PostgreSQL for user/session management
  */
 
-import { Pool, ClientBase } from 'pg'
-import { Signer } from '@aws-sdk/rds-signer'
-import { awsCredentialsProvider } from '@vercel/functions/oidc'
+import { Pool } from 'pg'
 import { attachDatabasePool } from '@vercel/functions'
 
-// ─── Initialize Database Pool ────────────────────────────────────────────────
-
-const signer = new Signer({
-  credentials: awsCredentialsProvider({
-    roleArn: process.env.AWS_ROLE_ARN!,
-    clientConfig: { region: process.env.AWS_REGION || 'us-east-1' },
-  }),
-  region: process.env.AWS_REGION || 'us-east-1',
-  hostname: process.env.PGHOST!,
-  username: process.env.PGUSER || 'postgres',
-  port: 5432,
-})
+// Parse DATABASE_URL for connection
+const databaseUrl = process.env.DATABASE_URL
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL environment variable is not set')
+}
 
 const pool = new Pool({
-  host: process.env.PGHOST!,
-  database: process.env.PGDATABASE || 'postgres',
-  port: 5432,
-  user: process.env.PGUSER || 'postgres',
-  password: () => signer.getAuthToken(),
+  connectionString: databaseUrl,
   ssl: { rejectUnauthorized: false },
   max: 20,
 })

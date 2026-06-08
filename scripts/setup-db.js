@@ -1,6 +1,13 @@
 import postgres from "postgres"
 
-const sql = postgres(process.env.POSTGRES_URL_NON_POOLING, {
+// Use DATABASE_URL or POSTGRES_URL_NON_POOLING
+const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING
+if (!databaseUrl) {
+  console.error("[v0] ERROR: DATABASE_URL or POSTGRES_URL_NON_POOLING not set")
+  process.exit(1)
+}
+
+const sql = postgres(databaseUrl, {
   ssl: "require",
   max: 1,
 })
