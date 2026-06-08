@@ -19,6 +19,19 @@ interface Message {
 function quickTaskTypeAnalysis(input: string): string {
   const lower = input.toLowerCase()
 
+  // PPT/Presentation - أعطيه أولوية عالية
+  if (
+    lower.includes("ppt") ||
+    lower.includes("presentation") ||
+    lower.includes("عرض") ||
+    lower.includes("شرائح") ||
+    lower.includes("slide") ||
+    lower.includes("powerpoint") ||
+    lower.includes("بوربوينت")
+  ) {
+    return "presentation"
+  }
+
   // صور
   if (
     lower.includes("صورة") ||
@@ -34,7 +47,7 @@ function quickTaskTypeAnalysis(input: string): string {
       : "image_generation"
   }
 
-  // كود - أعطيه أولوية
+  // كود - أعطيه أولوية عالية
   if (
     lower.includes("كود") ||
     lower.includes("برنامج") ||
@@ -51,14 +64,18 @@ function quickTaskTypeAnalysis(input: string): string {
     return "code"
   }
 
-  // ملفات
+  // ملفات Excel
   if (
-    lower.includes("ملف") ||
     lower.includes("excel") ||
     lower.includes("جدول") ||
-    lower.includes("عرض") ||
-    lower.includes("spreadsheet")
+    lower.includes("spreadsheet") ||
+    lower.includes("csv")
   ) {
+    return "file_generation"
+  }
+
+  // ملفات عامة (ملف بدون excel)
+  if (lower.includes("ملف")) {
     return "file_generation"
   }
 
@@ -103,8 +120,8 @@ export async function routeMelegeRequest(
     // 4. استدعاء الـ model المناسب
     const response = await generateWithFalRouter(systemPrompt, messages, {
       model: taskCapability.model as string,
-      maxTokens: taskType === "code" ? 2000 : 1500,
-      temperature: taskType === "code" ? 0.2 : 0.7
+      maxTokens: taskType === "code" ? 2000 : taskType === "presentation" ? 4000 : 1500,
+      temperature: taskType === "code" ? 0.2 : taskType === "presentation" ? 0.3 : 0.7
     })
 
     return response || "معلش حصل مشكلة، جرب تاني 😅"
