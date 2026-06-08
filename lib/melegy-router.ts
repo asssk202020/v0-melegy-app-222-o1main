@@ -7,6 +7,7 @@
 import { generateWithFalRouter } from "./falRouterService"
 import { MELEGY_SYSTEM_PROMPT, MELEGY_CAPABILITIES } from "./melegy-system-prompt"
 import { shouldPerformWebSearch } from "./web-search-service"
+import { generateImage } from "./image-generation-service"
 
 interface Message {
   role: "user" | "assistant" | "system"
@@ -113,17 +114,28 @@ export async function routeMelegeRequest(
     const taskType = quickTaskTypeAnalysis(userInput)
     console.log(`[Melegy] Task: ${taskType}`)
 
-    // 2. اختيار الـ model الصحيح
+    // 2. معالجة خاصة للصور
+    if (taskType === "image_generation" || taskType === "image_edit") {
+      try {
+        const imageUrl = await generateImage(userInput)
+        return `✨ تم توليد الصورة بنجاح!\n\n${imageUrl}\n\nهل تحب النتيجة؟ بقدر أعدلها لك أكتر! 🎨`
+      } catch (error: any) {
+        console.error("[Melegy Router] Image generation error:", error.message)
+        return `معلش! توليد الصور حالياً فيه مشكلة صغيرة. 😅\n\nجرب وصف الصورة بطريقة مختلفة أو اسأل عن حاجة تانية وأنا هساعدك! 💪`
+      }
+    }
+
+    // 3. اختيار الـ model الصحيح للمهام الأخرى
     const taskCapability = MELEGY_CAPABILITIES[taskType as keyof typeof MELEGY_CAPABILITIES] ||
       MELEGY_CAPABILITIES.general
 
-    // 3. بناء الرسائل مع الـ context الكامل (آخر 10 رسائل فقط للسرعة)
+    // 4. بناء الرسائل مع الـ context الكامل (آخر 10 رسائل فقط للسرعة)
     const messages: Message[] = [
       ...conversationHistory.slice(-10),
       { role: "user", content: userInput }
     ]
 
-    // 4. استدعاء الـ model المناسب
+    // 5. استدعاء الـ model المناسب
     const response = await generateWithFalRouter(systemPrompt, messages, {
       model: taskCapability.model as string,
       maxTokens: taskType === "code" ? 2000 : taskType === "presentation" ? 4000 : 1500,
