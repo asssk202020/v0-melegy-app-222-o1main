@@ -7,7 +7,7 @@ interface Message {
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-const MODEL = "nvidia/nemotron-3.5-8b" // NVIDIA Nemotron 3.5 Content Safety model
+const MODEL = "openai/gpt-4o" // OpenAI GPT-4 Omni model for superior reasoning and multilingual support
 
 export async function generateStreamingResponse(
   userInput: string,
