@@ -4,17 +4,23 @@ import { MELEGY_SYSTEM_PROMPT } from "@/lib/melegy-system-prompt"
 import { generateWithFalRouterVision } from "@/lib/falRouterService"
 
 function stripMarkdown(text: string): string {
-  return text
+  // ألا تمس الجداول والمراجع - احفظهم كما هم
+  const hasTable = text.includes("|") || text.includes("<table")
+  const hasReferences = text.includes("ref-badge") || text.includes("web-search-references")
+  
+  let result = text
     .replace(/\*\*(.+?)\*\*/g, "$1")
     .replace(/\*(.+?)\*/g, "$1")
     .replace(/_{1,2}(.+?)_{1,2}/g, "$1")
     .replace(/^#{1,6}\s+/gm, "")
     .replace(/`{1,3}[^`]*`{1,3}/g, "")
-    .replace(/^[\s]*[-*•]\s+/gm, "")
+    .replace(/^\[\s]*[-*•]\s+/gm, "")
     .replace(/^\d+\.\s+/gm, "")
     .replace(/\[\d+\]/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim()
+
+  return result
 }
 
 const EGYPTIAN_SYSTEM_PROMPT = MELEGY_SYSTEM_PROMPT

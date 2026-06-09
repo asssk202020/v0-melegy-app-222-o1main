@@ -76,7 +76,7 @@ export function buildSearchQuery(query: string): string {
 }
 
 /**
- * تنسيق نتائج البحث لـ Melegy
+ * تنسيق نتائج البحث لـ Melegy مع دوائر مرجعية احترافية
  */
 export function formatSearchResults(results: SearchResult[]): string {
   if (!results || results.length === 0) {
@@ -86,18 +86,19 @@ export function formatSearchResults(results: SearchResult[]): string {
   // أعرض أول 3-5 نتائج
   const topResults = results.slice(0, 5)
 
-  // بناء HTML للمراجع بشكل احترافي
+  // بناء HTML للمراجع بشكل احترافي مع ref-badge class
   const references = topResults
     .map((result, index) => {
       const icon = getSourceIcon(result.source)
-      return `<a href="${result.url}" target="_blank" class="ref-badge" title="${result.title}">
-  ${icon} ${result.source}
+      const cleanTitle = result.title.substring(0, 30)
+      return `<a href="${result.url}" target="_blank" rel="noopener noreferrer" class="ref-badge" title="${result.title}">
+${icon} ${cleanTitle}...
 </a>`
     })
-    .join("")
+    .join(" ")
 
   return `
-<div class="web-search-references">
+<div class="web-search-references" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
   ${references}
 </div>
 `
