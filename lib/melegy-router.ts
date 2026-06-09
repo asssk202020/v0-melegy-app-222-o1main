@@ -168,8 +168,17 @@ export async function routeMelegeRequest(
     // 6. استخراج أي صور من الرد
     const { text, imageUrl } = extractImageUrl(response || "")
 
+    // 7. إضافة المراجع من web search إذا كانت موجودة
+    let finalText = text || "معلش حصل مشكلة، جرب تاني"
+    
+    // إذا كان هناك web search results، أضيف المراجع
+    if (taskType === "web_search" && response?.includes("ref-badge")) {
+      // الـ response بالفعل يحتوي على المراجع، ما حاجة لإضافة
+      finalText = response
+    }
+
     return {
-      text: text || "معلش حصل مشكلة، جرب تاني",
+      text: finalText,
       imageUrl
     }
   } catch (error: any) {

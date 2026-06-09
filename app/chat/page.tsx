@@ -1156,7 +1156,62 @@ export default function ChatPage() {
                   </div>
                 </div>
               )}
-              <p className="chat-message whitespace-pre-wrap break-words leading-relaxed text-xs font-bold" style={{ fontFamily: "Cairo, sans-serif", fontSize: "12px", fontWeight: "bold" }}>{message.content}</p>
+              {/* Render message content with tables and references support */}
+              <div className="chat-message leading-relaxed text-xs font-bold" style={{ fontFamily: "Cairo, sans-serif", fontSize: "12px", fontWeight: "bold" }}>
+                {message.content.includes("|") ? (
+                  // Render markdown table as HTML
+                  <div className="overflow-x-auto my-3">
+                    <table className="min-w-full text-sm border-collapse border border-gray-600">
+                      <tbody>
+                        {message.content.split("\n").map((line, lineIdx) => {
+                          if (!line.trim().startsWith("|")) return null
+                          const cells = line.split("|").filter(cell => cell.trim())
+                          return (
+                            <tr key={lineIdx} className="border border-gray-600">
+                              {cells.map((cell, cellIdx) => (
+                                <td
+                                  key={cellIdx}
+                                  className="px-3 py-2 border border-gray-600 text-right"
+                                  style={{
+                                    backgroundColor: lineIdx === 0 ? "#1f2937" : "#111827",
+                                    fontWeight: lineIdx === 0 ? "bold" : "normal"
+                                  }}
+                                >
+                                  {cell.trim()}
+                                </td>
+                              ))}
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                )}
+                
+                {/* Render reference badges if present */}
+                {message.content.includes("ref-badge") && (
+                  <div className="mt-4 pt-3 border-t border-gray-700 flex flex-wrap gap-2">
+                    {message.content.match(/href="([^"]+)"[^>]*>([^<]+)<\/a>/g)?.map((match, idx) => {
+                      const urlMatch = match.match(/href="([^"]+)"/)
+                      const textMatch = match.match(/>([^<]+)</)
+                      if (!urlMatch || !textMatch) return null
+                      return (
+                        <a
+                          key={idx}
+                          href={urlMatch[1]}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/50 transition"
+                        >
+                          🌐 {textMatch[1]}
+                        </a>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
               {message.excelData && (
                 <div className="mt-2">
                   <div className="overflow-x-auto max-h-48 border border-gray-700 rounded">
