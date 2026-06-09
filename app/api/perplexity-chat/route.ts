@@ -61,16 +61,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Use Melegy Router for intelligent task routing
-    const responseText = await routeMelegeRequest(
+    const routerResponse = await routeMelegeRequest(
       userPrompt,
       messages,
       fullSystemPrompt
     )
 
-    const cleanedText = stripMarkdown(responseText)
+    const cleanedText = stripMarkdown(routerResponse.text)
 
     return NextResponse.json({
-      response: cleanedText || "معلش حصل مشكلة، جرب تاني 😅",
+      response: cleanedText || "معلش حصل مشكلة، جرب تاني",
+      imageUrl: routerResponse.imageUrl || null,
       detectedEmotion: "neutral",
       emotionScore: 0,
     })

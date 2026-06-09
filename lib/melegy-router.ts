@@ -15,6 +15,22 @@ interface Message {
 }
 
 /**
+ * استخراج صورة من الرد إذا كانت موجودة
+ */
+function extractImageUrl(response: string): { text: string; imageUrl?: string } {
+  const urlRegex = /https?:\/\/[^\s\n]+\.(png|jpg|jpeg|gif|webp)/gi
+  const match = response.match(urlRegex)
+  
+  if (match && match[0]) {
+    const imageUrl = match[0]
+    const text = response.replace(imageUrl, "").trim()
+    return { text, imageUrl }
+  }
+  
+  return { text: response }
+}
+
+/**
  * تحليل سريع جداً لنوع الطلب (بدون API calls)
  * بناء على كلمات مفتاحية - أسرع من JSON parsing
  */
@@ -108,7 +124,7 @@ export async function routeMelegeRequest(
   userInput: string,
   conversationHistory: Message[],
   systemPrompt: string
-): Promise<string> {
+): Promise<{ text: string; imageUrl?: string }> {
   try {
     // 1. تحليل سريع جداً للنوع
     const taskType = quickTaskTypeAnalysis(userInput)
@@ -118,10 +134,17 @@ export async function routeMelegeRequest(
     if (taskType === "image_generation" || taskType === "image_edit") {
       try {
         const imageUrl = await generateImage(userInput)
-        return `✨ تم توليد الصورة بنجاح!\n\n${imageUrl}\n\nهل تحب النتيجة؟ بقدر أعدلها لك أكتر! 🎨`
+        // استخراج URL من الرد
+        const { text, imageUrl: extractedUrl } = extractImageUrl(imageUrl)
+        return {
+          text: text || "تم توليد الصورة بنجاح! هل تحب النتيجة؟",
+          imageUrl: extractedUrl
+        }
       } catch (error: any) {
         console.error("[Melegy Router] Image generation error:", error.message)
-        return `معلش! توليد الصور حالياً فيه مشكلة صغيرة. 😅\n\nجرب وصف الصورة بطريقة مختلفة أو اسأل عن حاجة تانية وأنا هساعدك! 💪`
+        return {
+          text: "معلش! توليد الصور حالياً فيه مشكلة صغيرة. جرب وصف الصورة بطريقة مختلفة!"
+        }
       }
     }
 
@@ -142,10 +165,18 @@ export async function routeMelegeRequest(
       temperature: taskType === "code" ? 0.2 : taskType === "presentation" ? 0.3 : 0.7
     })
 
-    return response || "معلش حصل مشكلة، جرب تاني 😅"
+    // 6. استخراج أي صور من الرد
+    const { text, imageUrl } = extractImageUrl(response || "")
+
+    return {
+      text: text || "معلش حصل مشكلة، جرب تاني",
+      imageUrl
+    }
   } catch (error: any) {
     console.error("[Melegy Router] Error:", error)
-    return "معلش حصل خطأ مؤقت، حاول تاني بعد شوية 😅"
+    return {
+      text: "معلش حصل خطأ مؤقت، حاول تاني بعد شوية"
+    }
   }
 }
 
