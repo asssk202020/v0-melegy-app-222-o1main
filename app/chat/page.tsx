@@ -687,9 +687,14 @@ export default function ChatPage() {
         }),
       })
 
+      console.log("[v0] API Response status:", response.status)
+      
       const data = await response.json()
+      
+      console.log("[v0] API Response data:", data)
 
       if (!response.ok || data.error) {
+        console.error("[v0] API Error:", data.error || "API error")
         throw new Error(data.error || "API error")
       }
 
@@ -700,6 +705,8 @@ export default function ChatPage() {
         imageUrl: data.imageUrl || undefined,
       }
 
+      console.log("[v0] Adding assistant message:", assistantMessage)
+      
       setMessages((prev) => [...prev, assistantMessage])
       
       // Try to increment usage, but don't fail if it errors
@@ -1521,7 +1528,7 @@ export default function ChatPage() {
               <textarea
                 value={animatePrompt}
                 onChange={(e) => setAnimatePrompt(e.target.value)}
-                placeholder={animateMode === "i2v" ? "مثال: الشعر يتحرك مع الريح..." : "مثال: الشخصية بتمشي في الشارع..."}
+                placeholder={animateMode === "i2v" ? "مثال: الشعر يتحرك مع الريح..." : "مث��ل: الشخصية بتمشي في الشارع..."}
                 className="w-full bg-gray-800 border border-gray-600 rounded-lg p-3 text-sm resize-none min-h-[80px] focus:outline-none focus:border-purple-500"
                 style={{ fontFamily: "Cairo, sans-serif" }}
                 dir="rtl"
