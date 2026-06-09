@@ -452,75 +452,9 @@ export default function ChatPage() {
   }
 
   const generateImageWithPrompt = async (userPrompt: string) => {
-    const imageCheck = await canGenerateImage()
-    if (!imageCheck.allowed) {
-      toast({
-        title: "انتهت الصور اليومية",
-        description: imageCheck.reason,
-        variant: "destructive",
-      })
-      setShowUpgradeModal(true)
-      return
-    }
-
-    try {
-      setIsGeneratingImage(true)
-      setCountdown(10)
-
-      const countdownInterval = setInterval(() => {
-        setCountdown((prev) => (prev > 0 ? prev - 1 : 0))
-      }, 1000)
-
-      try {
-        const textMatch = userPrompt.match(/"([^"]+)"|'([^']+)'|(?:اكتب|write|كتابة)\s+(.+?)(?:\s+على|\s+فوق|$)/i)
-        const extractedText = textMatch ? (textMatch[1] || textMatch[2] || textMatch[3]) : null
-
-        const cleanImagePrompt = userPrompt
-          .replace(/"[^"]+"|'[^']+'/, "")
-          .replace(/(?:اكتب|write|كتابة)\s+.+?(?:\s+على|\s+فوق|$)/gi, "")
-          .trim()
-
-        const response = await fetch("/api/generate-design", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            imagePrompt: cleanImagePrompt || userPrompt,
-            textContent: extractedText,
-            textPosition: "center",
-          }),
-        })
-
-        if (!response.ok) throw new Error("Failed to generate design")
-
-        const { design } = await response.json()
-
-        clearInterval(countdownInterval)
-        setIsGeneratingImage(false)
-        setCountdown(10)
-
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: "تم إنشاء التصميم بنجاح! يمكنك تعديل النص والألوان.",
-          imageUrl: design.backgroundImage,
-          designData: design,
-        }
-
-        setMessages((prev) => [...prev, assistantMessage])
-        await incrementImageUsage()
-      } catch (error) {
-        clearInterval(countdownInterval)
-        setIsGeneratingImage(false)
-        setCountdown(10)
-        toast({
-          title: "خطأ",
-          description: `فشل في إنشاء الصورة: ${error instanceof Error ? error.message : "Unknown error"}`,
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      console.error("[v0] Error generating image with prompt:", error)
-    }
+    // Image generation now handled through routeMelegeRequest in the main chat flow
+    // This function is kept for backward compatibility but should not be called
+    console.warn("[v0] Deprecated: Use main chat flow for image generation")
   }
 
   const analyzeImage = async (imageUrl: string, userMessage?: string): Promise<string> => {
