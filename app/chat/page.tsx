@@ -697,6 +697,7 @@ export default function ChatPage() {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content: data.response,
+        imageUrl: data.imageUrl || undefined,
       }
 
       setMessages((prev) => [...prev, assistantMessage])
